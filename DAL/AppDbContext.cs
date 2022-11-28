@@ -11,5 +11,6 @@ namespace Allup.DAL
         }
 
         public DbSet<Language> Languages { get; set; }
+        public DbSet<Category> Categories { get; set; }
     }
 }

@@ -22,6 +22,8 @@ namespace Allup
 
             Constants.RootPath = builder.Environment.WebRootPath;
             Constants.FlagPath = Path.Combine(Constants.RootPath,"assets","images","flag");
+            Constants.CategoryPath = Path.Combine(Constants.RootPath, "assets", "images", "category");
+
 
             var app = builder.Build();
 

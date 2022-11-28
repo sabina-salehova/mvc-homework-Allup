@@ -4,5 +4,6 @@
     {
         public static string RootPath { get; set; }
         public static string FlagPath { get; set; }
+        public static string CategoryPath { get; set; }
     }
 }
