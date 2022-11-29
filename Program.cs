@@ -1,4 +1,5 @@
 using Allup.Areas.Admin.Data;
+using Allup.Areas.Admin.Services;
 using Allup.DAL;
 using Allup.Services;
 using Microsoft.EntityFrameworkCore;
@@ -20,9 +21,11 @@ namespace Allup
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
+            builder.Services.AddScoped<CategoryService>();
             Constants.RootPath = builder.Environment.WebRootPath;
             Constants.FlagPath = Path.Combine(Constants.RootPath,"assets","images","flag");
             Constants.CategoryPath = Path.Combine(Constants.RootPath, "assets", "images", "category");
+            Constants.ProductPath = Path.Combine(Constants.RootPath, "assets", "images", "product");
 
 
             var app = builder.Build();

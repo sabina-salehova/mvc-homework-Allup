@@ -10,7 +10,7 @@
     {
          <div class="col-lg-2">
         <div class="single-category text-center">
-            <a target="_blank" href="shop-left-sidebar.html">
+                <a target="_blank" asp-controller="Shop" asp-action="Index" asp-route-categoryId="@Model[i].Id">
                     <img src="~/assets/images/category/@Model[i].ImageUrl" alt="category">
                 <p>@Model[i].Name</p>
             </a>
@@ -18,7 +18,7 @@
             @if (count>i+1)
         {
             <div class="single-category text-center">
-                <a target="_blank" href="shop-left-sidebar.html">
+                    <a target="_blank" asp-controller="Shop" asp-action="Index" asp-route-categoryId="@Model[i+1].Id">
                         <img src="~/assets/images/category/@Model[i+1].ImageUrl" alt="category">
                     <p>@Model[i+1].Name</p>
                 </a>
