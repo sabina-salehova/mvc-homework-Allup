@@ -2,6 +2,7 @@
 using Allup.Areas.Admin.Models;
 using Allup.DAL;
 using Allup.DAL.Entities;
+using Allup.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;

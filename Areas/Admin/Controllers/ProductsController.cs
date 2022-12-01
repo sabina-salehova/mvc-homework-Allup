@@ -3,6 +3,7 @@ using Allup.Areas.Admin.Models;
 using Allup.Areas.Admin.Services;
 using Allup.DAL;
 using Allup.DAL.Entities;
+using Allup.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -20,9 +21,11 @@ namespace Allup.Areas.Admin.Controllers
            _categoryService = categoryService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(new List<Product>());
+            var products = await _dbContext.Products.Include(x => x.ProductCategories).ThenInclude(x => x.Category).ToListAsync();
+
+            return View(products);
         }
 
         public async Task<IActionResult> Create()
@@ -110,6 +113,16 @@ namespace Allup.Areas.Admin.Controllers
             await _dbContext.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> LoadChildCategories(int parentCategoryId)
+        {
+            var parentCategory = await _dbContext.Categories.Where(x => !x.IsDeleted && x.IsMain && x.Id == parentCategoryId).Include(x => x.Children).FirstOrDefaultAsync();
+            var childCategoriesSelectListItem = new List<SelectListItem>();
+
+            parentCategory.Children.ToList().ForEach(x => childCategoriesSelectListItem.Add(new SelectListItem(x.Name, x.Id.ToString())));
+
+            return Json(childCategoriesSelectListItem);
         }
 
     }

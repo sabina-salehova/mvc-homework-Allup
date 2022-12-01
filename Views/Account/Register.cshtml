@@ -1,0 +1,56 @@
+﻿@model RegisterViewModel
+<!--====== Breadcrumb Part Start ======-->
+
+<div class="breadcrumb-area">
+    <div class="container-fluid custom-container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item active">Register</li>
+            </ol>
+        </nav>
+    </div> <!-- container -->
+</div>
+
+<!--====== Breadcrumb Part Ends ======-->
+<!--====== Register Part Start ======-->
+
+<section class="register-area pt-10">
+    <div class="container-fluid custom-container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="login-register-wrapper mt-30">
+                    <h4 class="allup-title">Creat New Account</h4>
+                    <p class="mt-10">Already have an account? <a asp-controller="account" asp-action="login">Log in instead!</a></p>
+
+                    <form asp-action="register" method="post">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <div class="single-form">
+                            <input asp-for="Firstname" placeholder="First Name">
+                        </div>
+                        <div class="single-form">
+                            <input asp-for="Lastname" placeholder="Last Name">
+                        </div>
+                        <div class="single-form">
+                            <input asp-for="Email" placeholder="Email Address">
+                        </div>
+                        <div class="single-form">
+                            <input asp-for="Username" placeholder="Username">
+                        </div>
+                        <div class="single-form">
+                            <input asp-for="Password" placeholder="Password">
+                        </div>
+                        <div class="single-form">
+                            <input asp-for="ConfirmPassword" placeholder="Confirm Password">
+                        </div>
+                        <div class="single-form">
+                            <button type="submit" class="main-btn main-btn-2">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--====== Register Part Ends ======-->

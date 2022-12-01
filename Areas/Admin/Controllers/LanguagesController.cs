@@ -4,7 +4,7 @@ using Allup.DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
-using Constants = Allup.Areas.Admin.Data.Constants;
+using Constants = Allup.Data.Constants;
 
 namespace Allup.Areas.Admin.Controllers
 {

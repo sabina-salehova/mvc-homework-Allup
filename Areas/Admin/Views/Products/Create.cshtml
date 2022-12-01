@@ -65,9 +65,35 @@
     </div>
 </div>
 
-@section Scripts
-    {
+
+
+@section Scripts{
     <script>
-        
+        $(document).ready(function () {
+            $("#parentCategory").change(function () {
+                var parentCategoryId = $(this).val();
+                $.ajax({
+                    type: "GET",
+                    url: '/Admin/Products/LoadChildCategories',
+                    data: { parentCategoryId: parentCategoryId },
+                    success: successFunc,
+                    error: errorFunc
+                });
+                function successFunc(data) {
+                    console.log(data);
+                    var select = $("#childCategory");
+                    select.empty();
+                    $.each(data, function (index, itemData) {
+                        select.append($('<option/>', {
+                            value: itemData.value,
+                            text: itemData.text
+                        }));
+                    });
+                }
+                function errorFunc() {
+                    alert('error');
+                }
+            });
+        });
     </script>
 }

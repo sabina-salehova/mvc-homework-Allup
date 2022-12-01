@@ -1,7 +1,9 @@
-using Allup.Areas.Admin.Data;
 using Allup.Areas.Admin.Services;
 using Allup.DAL;
+using Allup.DAL.Entities;
+using Allup.Data;
 using Allup.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -9,7 +11,7 @@ namespace Allup
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public async static Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -18,10 +20,30 @@ namespace Allup
 
             builder.Services.AddDbContext<AppDbContext>(options=>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+                     builder =>
+                     {
+                         builder.MigrationsAssembly(nameof(Allup));
+                     });
             });
 
+
+            builder.Services.AddIdentity<User, IdentityRole>(options =>
+            {
+                options.Lockout.MaxFailedAccessAttempts = 2;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+
+                options.User.RequireUniqueEmail = true;
+            }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+
+
             builder.Services.AddScoped<CategoryService>();
+            builder.Services.Configure<AdminUser>(builder.Configuration.GetSection("AdminUser"));
+
             Constants.RootPath = builder.Environment.WebRootPath;
             Constants.FlagPath = Path.Combine(Constants.RootPath,"assets","images","flag");
             Constants.CategoryPath = Path.Combine(Constants.RootPath, "assets", "images", "category");
@@ -40,6 +62,14 @@ namespace Allup
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var serviceProvider = scope.ServiceProvider;
+
+                var dataInitalizer = new DataInitializer(serviceProvider);
+                await dataInitalizer.SeedData();
+            }
 
             app.UseRouting();
 
@@ -62,7 +92,7 @@ namespace Allup
                 );
             });
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }
