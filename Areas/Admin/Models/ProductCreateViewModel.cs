@@ -11,9 +11,7 @@ namespace Allup.Areas.Admin.Models
         public int Rate { get; set; }
         public int ExTax { get; set; }
         public string Brand { get; set; }
-
         public IFormFile[] Images { get; set; }
-
         public List<SelectListItem>? ParentCategories { get; set; }
         public int ParentCategoryId { get; set; }
         public List<SelectListItem>? ChildCategories { get; set; }

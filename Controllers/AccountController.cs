@@ -88,7 +88,7 @@ namespace Allup.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View();
+                return View(new LoginViewModel { ReturnUrl = model.ReturnUrl});
             }
 
             var existUser = await _userManager.FindByNameAsync(model.Username);
@@ -96,7 +96,7 @@ namespace Allup.Controllers
             if (existUser == null)
             {
                 ModelState.AddModelError("", "Invalid credentials");
-                return View();
+                return View(new LoginViewModel { ReturnUrl = model.ReturnUrl });
             }
 
             var signResult = await _signInManager.PasswordSignInAsync(existUser, model.Password, model.RememberMe, false);
@@ -104,20 +104,27 @@ namespace Allup.Controllers
             if (signResult.IsLockedOut)
             {
                 ModelState.AddModelError("", "locked out");
-                return View();
+                return View(new LoginViewModel { ReturnUrl = model.ReturnUrl });
             }
 
             if (!signResult.Succeeded)
             {
                 ModelState.AddModelError("", "Invalid credentials");
-                return View();
+                return View(new LoginViewModel { ReturnUrl = model.ReturnUrl });
             }
 
             if (!string.IsNullOrEmpty(model.ReturnUrl))
+            {
+                if (User.Identity.IsAuthenticated)
+                {
+                    Console.WriteLine("kecdi");
+                }
                 return Redirect(model.ReturnUrl);
+            }
 
             return RedirectToAction("Index", "Home");
         }
+
         public IActionResult Index()
         {
             return View();

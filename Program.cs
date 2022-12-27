@@ -73,6 +73,7 @@ namespace Allup
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             var locOptions = app.Services.GetService<IOptions<RequestLocalizationOptions>>();

@@ -88,9 +88,7 @@ namespace Allup.Areas.Admin.Controllers
             var parentCategory = await _dbContext
               .Categories
               .Where(x => !x.IsDeleted && x.IsMain && x.Id == model.ParentCategoryId)
-              .Include(x => x.Children).FirstOrDefaultAsync();
-
-            var childCategory = parentCategory?.Children.FirstOrDefault(x => x.Id == model.ChildCategoryId);
+              .Include(x => x.Children).FirstOrDefaultAsync();           
 
             var productCategories = new List<ProductCategory>
             {
@@ -98,14 +96,21 @@ namespace Allup.Areas.Admin.Controllers
                 {
                     CategoryId = parentCategory.Id,
                     ProductId = createdProduct.Id
-                },
+                } 
+            }; 
 
-                new ProductCategory
-                {
-                    CategoryId = childCategory.Id,
-                    ProductId = createdProduct.Id
-                }
-            };
+            var childCategory = parentCategory?.Children.FirstOrDefault(x => x.Id == model.ChildCategoryId);
+
+            if (childCategory is not null)
+            {
+                productCategories.Add(
+                    new ProductCategory
+                    {
+                        CategoryId = childCategory.Id,
+                        ProductId = createdProduct.Id
+                    }
+                 ); 
+            }
 
             createdProduct.ProductCategories.AddRange(productCategories);
 
@@ -123,6 +128,81 @@ namespace Allup.Areas.Admin.Controllers
             parentCategory.Children.ToList().ForEach(x => childCategoriesSelectListItem.Add(new SelectListItem(x.Name, x.Id.ToString())));
 
             return Json(childCategoriesSelectListItem);
+        }
+
+        public async Task<IActionResult> Update(int? id)
+        {
+            if (id is null) return BadRequest();
+
+            var product = await _dbContext.Products
+                .Where(p => p.Id == id)
+                .Include(p => p.ProductImages)
+                .Include(p => p.ProductCategories)
+                .ThenInclude(c => c.Category)
+                .FirstOrDefaultAsync();
+
+            if (product is null) return NotFound();
+
+            var parentCategory = product.ProductCategories
+                .Where(c => c.Category.IsMain)
+                .First();
+
+            var childCategory = product.ProductCategories
+                .Where(c => !c.Category.IsMain)
+                .First();
+
+            var parentCategories = await _dbContext.Categories
+                .Where(c => !c.IsDeleted && c.IsMain)
+                .Include(c=>c.Children)
+                .ToListAsync();
+
+            var parentCategoriesSelectListItem = new List<SelectListItem>();
+            var childCategoriesSelectListItem = new List<SelectListItem>();
+
+            parentCategories
+                .ForEach(c => parentCategoriesSelectListItem.Add(new SelectListItem(c.Name, c.Id.ToString())));
+
+            if (childCategory is not null)
+            {
+                parentCategory.Category.Children
+                .ToList()
+                .ForEach((c => childCategoriesSelectListItem.Add(new SelectListItem(c.Name, c.Id.ToString()))));
+            }
+
+            return View(new ProductUpdateViewModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Discount = product.Discount,
+                Rate = product.Rate,
+                ExTax = product.ExTax,
+                Brand = product.Brand,
+                ProductImages = product.ProductImages,
+                ParentCategoryId = parentCategory.CategoryId,
+                ParentCategories = parentCategoriesSelectListItem,
+                ChildCategoryId = childCategory.CategoryId,
+                ChildCategories = childCategoriesSelectListItem
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update( ProductUpdateViewModel model, int? id)
+        {
+            if (id is null) return BadRequest();
+
+            var product = await _dbContext.Products
+                .Where(p => p.Id == id)
+                .Include(p => p.ProductImages)
+                .Include(p => p.ProductCategories)
+                .ThenInclude(c => c.Category)
+                .FirstOrDefaultAsync();
+
+            if (product is null) return NotFound();
+
+            return Ok(model);
         }
 
     }

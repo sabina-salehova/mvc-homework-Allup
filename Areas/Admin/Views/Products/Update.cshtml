@@ -1,10 +1,21 @@
-﻿@model ProductCreateViewModel
+﻿@model ProductUpdateViewModel
+
+@section Styles{
+    <style>
+        .productImage{
+            width: 130px !important;
+            height: 130px !important;
+            object-fit:contain !important;
+        }
+    </style>
+}
+
 <div class="row col-sm-6">
     <div class="col-sm-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title"> Create product</h4>
-                <form class="forms-sample" method="post" asp-action="Create" enctype="multipart/form-data">
+                <form class="forms-sample" method="post" asp-action="Update" enctype="multipart/form-data">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
                         <label asp-for="Name">Name</label>
@@ -46,6 +57,30 @@
                         <input asp-for="Images" class="form-control" placeholder="Images" accept="image/*">
                         <span asp-validation-for="Images" class="text-danger"></span>
                     </div>
+                    <input asp-for="RemovedImageIds" type="hidden"/>
+                    <div id="imagesTable">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pImage in Model.ProductImages)
+                                {
+                                    <tr>
+                                        <th>
+                                            <img class="productImage" src="~/assets/images/product/@pImage.Name" />
+                                        </th>
+                                        <td>
+                                            <button type="button" class="btn btn-danger removePImage" data-id="@pImage.Id">Delete</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="form-group">
                         <label asp-for="ParentCategoryId">Parent categories</label>
                         <select asp-for="ParentCategoryId" asp-items="Model.ParentCategories" id="parentCategory" class="form-control" placeholder="Parent kateqori secin"></select>
@@ -67,7 +102,65 @@
 
 @section Scripts{
     <script>
+
+        const removeSelectedImage=(event, fileIndex)=>
+        {            
+            const dt= new DataTransfer();
+            const productImageInput = document.getElementById("Images");
+
+            [...productImageInput.files].filter((file, index)=> 
+            {
+                if(index==fileIndex) 
+                    return;
+
+                dt.items.add(file);
+                productImageInput.files=dt.files;
+                event.target.closest("tr").remove();
+            });
+        }
+
         $(document).ready(function () {
+
+            const productImageInput = document.getElementById("Images");
+            productImageInput.addEventListener("change", function (e) {
+                const productImages=e.target.files;
+
+                [...productImages].forEach((productImage, fileIndex )=> {
+                    if(productImage.type.match("image"))
+                    {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(productImage);
+
+                        reader.addEventListener("load", function(e)
+                        {
+                            $("tbody").append(`
+                                <tr>
+                                    <th>
+                                        <img class="productImage" src="${e.target.result}" />
+                                    </th>
+                                    <td>
+                                        <button type="button" class="btn btn-danger removePImage" onClick="removeSelectedImage(event, ${fileIndex})">Delete</button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }  
+                })
+            })
+
+            let removePImageIds=[];
+
+            $(".removePImage").on("click", function()
+            {
+                const pImageId = $(this).attr('data-id');
+
+                removePImageIds.push(pImageId);
+                console.log(removePImageIds);
+                
+                $("input#RemovedImageIds").val(removePImageIds);
+                $(this).attr('disabled', 'disabled');
+            })
+
             $("#parentCategory").change(function () {
                 var parentCategoryId = $(this).val();
                 $.ajax({

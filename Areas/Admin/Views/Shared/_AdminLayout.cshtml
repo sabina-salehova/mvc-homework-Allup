@@ -1,7 +1,7 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject UserManager<User> _userManager
+﻿@inject UserManager<User> _userManager
 
 @{
+    Console.Write(User.Identity.Name);
     var user = await _userManager.FindByNameAsync(User.Identity.Name);
     var fullName = $"{user.Firstname} {user.Lastname}";
 }
@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="~/admin/css/style.css">
     <!-- endinject -->
     <link rel="shortcut icon" href="~/admin/images/favicon.png" />
+    @await RenderSectionAsync("Styles", false);
 </head>
 <body>
     <div class="container-scroller">
