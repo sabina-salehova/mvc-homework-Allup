@@ -14,12 +14,12 @@ namespace Allup.Areas.Admin.Models
         public int ExTax { get; set; }
         public string Brand { get; set; }
         public string? RemovedImageIds { get; set; }
-        public ICollection<ProductImage> ProductImages { get; set; }
+        public ICollection<ProductImage>? ProductImages { get; set; }
         public IFormFile[]? Images { get; set; }
-        public List<SelectListItem> ParentCategories { get; set; }
+        public List<SelectListItem>? ParentCategories { get; set; }
         public int ParentCategoryId { get; set; }
-        public List<SelectListItem> ChildCategories { get; set; }
-        public int ChildCategoryId { get; set; }
+        public List<SelectListItem>? ChildCategories { get; set; }
+        public int? ChildCategoryId { get; set; }
 
     }
 }

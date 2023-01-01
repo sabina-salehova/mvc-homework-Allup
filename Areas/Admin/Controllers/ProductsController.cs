@@ -143,33 +143,7 @@ namespace Allup.Areas.Admin.Controllers
 
             if (product is null) return NotFound();
 
-            var parentCategory = product.ProductCategories
-                .Where(c => c.Category.IsMain)
-                .First();
-
-            var childCategory = product.ProductCategories
-                .Where(c => !c.Category.IsMain)
-                .First();
-
-            var parentCategories = await _dbContext.Categories
-                .Where(c => !c.IsDeleted && c.IsMain)
-                .Include(c=>c.Children)
-                .ToListAsync();
-
-            var parentCategoriesSelectListItem = new List<SelectListItem>();
-            var childCategoriesSelectListItem = new List<SelectListItem>();
-
-            parentCategories
-                .ForEach(c => parentCategoriesSelectListItem.Add(new SelectListItem(c.Name, c.Id.ToString())));
-
-            if (childCategory is not null)
-            {
-                parentCategory.Category.Children
-                .ToList()
-                .ForEach((c => childCategoriesSelectListItem.Add(new SelectListItem(c.Name, c.Id.ToString()))));
-            }
-
-            return View(new ProductUpdateViewModel
+            var updateProduct = new ProductUpdateViewModel
             {
                 Id = product.Id,
                 Name = product.Name,
@@ -179,12 +153,43 @@ namespace Allup.Areas.Admin.Controllers
                 Rate = product.Rate,
                 ExTax = product.ExTax,
                 Brand = product.Brand,
-                ProductImages = product.ProductImages,
-                ParentCategoryId = parentCategory.CategoryId,
-                ParentCategories = parentCategoriesSelectListItem,
-                ChildCategoryId = childCategory.CategoryId,
-                ChildCategories = childCategoriesSelectListItem
-            });
+                ProductImages = product.ProductImages
+            };
+
+            var parentCategory = product.ProductCategories
+                .Where(c => c.Category.IsMain)
+                .First();
+
+            if (product.ProductCategories.Count > 1)
+            {
+                var childCategory = product.ProductCategories
+                .Where(c => !c.Category.IsMain)
+                .First();
+
+                var childCategoriesSelectListItem = new List<SelectListItem>();
+
+                parentCategory.Category.Children
+                .ToList()
+                .ForEach(c => childCategoriesSelectListItem.Add(new SelectListItem(c.Name, c.Id.ToString())));
+
+                updateProduct.ChildCategoryId = childCategory.CategoryId;
+                updateProduct.ChildCategories = childCategoriesSelectListItem;
+            }
+
+            var parentCategories = await _dbContext.Categories
+                .Where(c => !c.IsDeleted && c.IsMain)
+                .Include(c=>c.Children)
+                .ToListAsync();
+
+            var parentCategoriesSelectListItem = new List<SelectListItem>();            
+
+            parentCategories
+                .ForEach(c => parentCategoriesSelectListItem.Add(new SelectListItem(c.Name, c.Id.ToString())));
+
+            updateProduct.ParentCategoryId = parentCategory.CategoryId;
+            updateProduct.ParentCategories = parentCategoriesSelectListItem;
+
+            return View(updateProduct);
         }
 
         [HttpPost]
@@ -202,7 +207,109 @@ namespace Allup.Areas.Admin.Controllers
 
             if (product is null) return NotFound();
 
-            return Ok(model);
+            if (!ModelState.IsValid)
+            {
+                var errorList = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return Ok(errorList);
+            }
+
+            var productImages = model.ProductImages;
+
+            if (model.Images is not null)
+            {
+                productImages = new List<ProductImage>();
+
+                foreach (var image in model.Images)
+                {
+                    if (!image.IsImage())
+                    {
+                        return Json("Sekil secmelisiz");
+                    }
+
+                    if (!image.IsAllowedSize(10))
+                    {
+                        return Json("Sekil 10mb-den cox ola bilmez");
+                    }
+
+                    var unicalName = await image.GenerateFile(Constants.ProductPath);
+                    productImages.Add(new ProductImage
+                    {
+                        Name = unicalName,
+                        ProductId = product.Id
+                    });
+                }
+
+                product.ProductImages.AddRange(productImages);
+            }            
+
+            if (model.RemovedImageIds is not null)
+            {
+                var removeImageIds = model.RemovedImageIds
+                .Split(",")
+                .ToList()
+                .Select(imageId => Int32.Parse(imageId));
+
+                var removeImages = await _dbContext.ProductImages
+                    .Where(ri => removeImageIds.Contains(ri.Id))
+                    .ToListAsync();
+
+                _dbContext.ProductImages.RemoveRange(removeImages);
+
+                foreach (var image in removeImages)
+                {
+                    var imagePath = Path.Combine(Constants.ProductPath, image.Name);
+
+                    if (System.IO.File.Exists(imagePath))
+                    {
+                        System.IO.File.Delete(imagePath);
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+
+            var parentCategory = await _dbContext
+              .Categories
+              .Where(x => !x.IsDeleted && x.IsMain && x.Id == model.ParentCategoryId)
+              .Include(x => x.Children).FirstOrDefaultAsync();
+
+            var productCategories = new List<ProductCategory>
+            {
+                new ProductCategory
+                {
+                    CategoryId = model.ParentCategoryId,
+                    ProductId = product.Id
+                }
+            };
+
+            var childCategory = parentCategory?.Children.FirstOrDefault(x => x.Id == model.ChildCategoryId);
+
+            if (childCategory is not null)
+            {
+                productCategories.Add(
+                    new ProductCategory
+                    {
+                        CategoryId = (int)model.ChildCategoryId,
+                        ProductId = product.Id
+                    }
+                 );
+            }
+
+            product.ProductCategories = productCategories;
+            product.Name = model.Name;
+            product.Description = model.Description;
+            product.Rate = model.Rate;
+            product.Price = model.Price;
+            product.Brand = model.Brand;
+            product.Discount = model.Discount;
+            product.ExTax = model.ExTax;
+
+            await _dbContext.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
     }

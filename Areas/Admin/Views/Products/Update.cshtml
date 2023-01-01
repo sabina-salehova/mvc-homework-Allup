@@ -120,17 +120,14 @@
         }
 
         $(document).ready(function () {
-
             const productImageInput = document.getElementById("Images");
             productImageInput.addEventListener("change", function (e) {
                 const productImages=e.target.files;
-
                 [...productImages].forEach((productImage, fileIndex )=> {
                     if(productImage.type.match("image"))
                     {
                         const reader = new FileReader();
                         reader.readAsDataURL(productImage);
-
                         reader.addEventListener("load", function(e)
                         {
                             $("tbody").append(`
@@ -147,20 +144,16 @@
                     }  
                 })
             })
-
             let removePImageIds=[];
-
             $(".removePImage").on("click", function()
             {
                 const pImageId = $(this).attr('data-id');
-
                 removePImageIds.push(pImageId);
                 console.log(removePImageIds);
                 
                 $("input#RemovedImageIds").val(removePImageIds);
                 $(this).attr('disabled', 'disabled');
             })
-
             $("#parentCategory").change(function () {
                 var parentCategoryId = $(this).val();
                 $.ajax({
@@ -171,7 +164,6 @@
                     error: errorFunc
                 });
                 function successFunc(data) {
-                    console.log(data);
                     var select = $("#childCategory");
                     select.empty();
                     $.each(data, function (index, itemData) {
