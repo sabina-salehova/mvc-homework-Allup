@@ -28,6 +28,7 @@
                             <img src="~/assets/images/category/@Model.ImageUrl" class="w-50" />
                         </div>                                                
                     }
+                    <input type="hidden" id="parentCategories" value="@Model.ParentCategories.Count()"></input>
                     <div class="form-group" id="parentDiv">
                         <label asp-for="ParentId">Choose parent category</label>
                         <select asp-for="ParentId" asp-items="Model.ParentCategories" class="form-control" placeholder="parent category secin"></select>
@@ -62,9 +63,15 @@
                 $("#parentDiv").addClass("d-none");
             }
             else {
-                $("#imageDiv").addClass("d-none");
-                $("#existImg").addClass("d-none");
-                $("#parentDiv").removeClass("d-none");
+                var parentCategoriesCount = $("#parentCategories").val();
+                if (parentCategoriesCount>0) {
+                    $("#imageDiv").addClass("d-none");
+                    $("#existImg").addClass("d-none");
+                    $("#parentDiv").removeClass("d-none");
+                }
+                else{
+                    alert("parent cateqoriya m0vcud deyil!!!");
+                }
             }
         });
     </script>

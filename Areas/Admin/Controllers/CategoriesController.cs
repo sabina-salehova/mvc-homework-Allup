@@ -139,7 +139,7 @@ namespace Allup.Areas.Admin.Controllers
                 ImageUrl = existCategory.ImageUrl
             };
 
-            var categories = await _dbContext.Categories.Where(c => !c.IsDeleted && c.IsMain).ToListAsync();
+            var categories = await _dbContext.Categories.Where(c => !c.IsDeleted && c.IsMain && c.Id!=id).ToListAsync();
             var categoriesSelectListItem = new List<SelectListItem>();
             categories.ForEach(x => categoriesSelectListItem.Add(new SelectListItem(x.Name, x.Id.ToString())));
             updateCategory.ParentCategories = categoriesSelectListItem;
@@ -171,6 +171,12 @@ namespace Allup.Areas.Admin.Controllers
                .Include(x => x.Children)
                .ToListAsync();
 
+            if (parentCategories.Count == 0)
+            {
+                ModelState.AddModelError("", "Parent kateqoriya movcud deyil!");
+                return View(model);
+            }
+
             if (model.IsMain)
             {
                 if (parentCategories.Any(c => c.Id!=model.Id && c.Name.ToLower().Equals(model.Name.ToLower())))
@@ -186,12 +192,22 @@ namespace Allup.Areas.Admin.Controllers
                         ModelState.AddModelError("", "Sekil secmelisiz");
                         return View(model);
                     }
-                }
+                }                
 
                 existCategory.ParentId = null;
             }
             else
             {
+                var existParentCategories = await _dbContext.Categories
+                    .Where(c => !c.IsDeleted && c.IsMain && c.Id != model.Id)
+                    .ToListAsync();
+
+                if (existParentCategories.Count == 0)
+                {
+                    ModelState.AddModelError("", "hazirda secmek ucun parent kateqoriya yoxdur, evvelce parent elave edin!!!");
+                    return View(model);
+                }
+
                 if (existCategory.ParentId==0)
                 {
                     if (model.ParentId == 0)
@@ -217,6 +233,16 @@ namespace Allup.Areas.Admin.Controllers
                 }
 
                 existCategory.ImageUrl = "";
+
+                var usedChildCategories = await _dbContext.Categories
+                    .Where(c => !c.IsDeleted && !c.IsMain && c.ParentId == model.Id)
+                    .ToListAsync();
+
+                if (usedChildCategories.Count>0)
+                {
+                    ModelState.AddModelError("", "Hazirda category parent olaraq istifade edilir, evvelce alt kateqoriyalar silinmelidir !!!");
+                    return View(model);
+                }
             }
 
             if (model.Image is not null)
