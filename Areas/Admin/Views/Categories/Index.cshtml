@@ -29,7 +29,7 @@
 
                                         <div style="display:inline-block">
                                             <form class="forms-sample" method="post" asp-action="Delete" asp-route-id="@item.Id">
-                                                <button type="submit" class="btn btn-danger mr-2">Delete</button>
+                                                <button type="submit" class="btn btn-danger mr-2 isDelete">Delete</button>
                                             </form>
                                         </div>
                                     </td>
@@ -43,3 +43,14 @@
         </div>
     </div>
 </div>
+
+@section Scripts
+{
+    <script>
+
+        $(".isDelete").click(function () {
+            alert("parent category silindikde onun alt category-leri de silinir");
+        });
+
+    </script>
+}
